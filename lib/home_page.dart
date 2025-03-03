@@ -2,25 +2,6 @@ import 'package:flutter/material.dart';
 import 'add_page.dart';
 import 'models/article.dart';
 
-void main() {
-  runApp(const NewsArticlesApp());
-}
-
-class NewsArticlesApp extends StatelessWidget {
-  const NewsArticlesApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'News Articles App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const HomePage(),
-    );
-  }
-}
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -39,7 +20,11 @@ class _HomePageState extends State<HomePage> {
 
   void _removeArticle(int index) {
     setState(() {
+      final removedArticle = articles[index];
       articles.removeAt(index);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${removedArticle.title} deleted')),
+      );
     });
   }
 
@@ -65,8 +50,9 @@ class _HomePageState extends State<HomePage> {
               itemCount: articles.length,
               itemBuilder: (context, index) {
                 final article = articles[index];
+                debugPrint("📌 ตรวจสอบบทความ: ${article.title}, content: ${article.content}");
                 return Dismissible(
-                  key: Key(article.title),
+                  key: Key(article.id), // ใช้ id แทน title เพื่อป้องกัน Key ซ้ำ
                   background: Container(
                     color: Colors.red,
                     alignment: Alignment.centerRight,
@@ -75,14 +61,28 @@ class _HomePageState extends State<HomePage> {
                   ),
                   onDismissed: (direction) {
                     _removeArticle(index);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${article.title} deleted')),
-                    );
                   },
                   child: ListTile(
                     title: Text(article.title),
-                    subtitle: Text(
-                        'By ${article.author} - Category: ${article.category} - Date: ${article.date.toString().split(' ')[0]}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "By ${article.author} - ${article.category} - ${article.date.toLocal().toString().split(' ')[0]}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          article.content,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
                     trailing: Text('Views: ${article.views}'),
                     onTap: () {
                       setState(() {
